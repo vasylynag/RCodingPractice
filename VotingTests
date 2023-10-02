@@ -1,0 +1,48 @@
+CTRL + ENTER#load Summit Creek Data
+sumcr <- read.csv ("sumcr.csv")
+sumcr
+CTRL+Enter
+ls()
+usvote <- read.csv("PrVt2012.csv", as.is=1)
+usvote
+PctObm.density <- density(PctObm)
+plot(PctObm.density)
+PctObm.density <- density(PctObm)
+hist(PctObm, breaks=20, probability=TRUE)
+lines(PctObm.density)
+rug(PctObm)
+rm(list = ls())
+dev.off()
+name(CO)
+name(CO)
+names(CO)
+CO <- read.csv("CO")
+names(CO)
+CO$PctVote<-CO$TotVote/CO$TotPop
+summary(CO$PctVote)
+hist(CO$PctVote)
+boxplot(CO$PctVote)
+CO$PctVote2<-CO$PctVote*100
+CO$PctPov2<-CO$PctPov*100
+attach(CO)
+hist(CO$PctVote)
+plot(PctPov2,PctVote2) #X-axis variable first, Y-axis variable second
+plot(PctVote2 ~ PctPov2, cex=.7, pch=19, xlab='Percent in Poverty', ylab='Percent of Population Voting in the 2012 Election',main="Voting and Poverty by County in Colorado")
+tapply(PctVote, Region, summary)
+tapply(PCTOBM, Region, summary)
+CO$PCTOBM<-CO$PCTOBM*100
+tapply(PCTOBM, Region, summary)
+boxplot(PctVote ~ Region)
+boxplot(PCTOBM ~ Region)
+# anova
+aov1 <- aov(PctVote ~ Region)
+aov1
+summary(aov1)
+hov1 <- barlett.test(PctVote ~ Region)
+hov1 <- bartlett.test(PctVote ~ Region)
+hov1
+# kruskal-wallis
+kruskal.test(PctVote ~ Region)
+install.packages("ggplot2",dep=T)
+library(ggplot2)
+ggplot(CO,aes(x=PctPov,y=PctVote,color=Region)) + geom_point()+geom_smooth(method="lm")
