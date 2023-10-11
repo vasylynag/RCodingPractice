@@ -1,0 +1,15 @@
+#### Senior Model
+
+CO <- read.csv("CO_County.csv")
+names(CO)
+attach (CO)
+# Call up the plot
+CO$PctOv65<-(CO$TotOv65/CO$TotPop)*100
+plot(PctVote ~ PctOv65, cex=0.7, pch=16, xlab='Percent of Seniors',
+     ylab='Percent of Pop Voting in 2020',
+     main="Voting and Poverty by County in Colorado",
+     col='blue')
+
+Mod01<-lm (PctVote~PctOv65)
+summary(Mod01)
+abline(Mod01,lty=2,col='red')
