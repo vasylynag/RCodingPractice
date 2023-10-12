@@ -1,0 +1,26 @@
+###Part 2 Practice with functions, create own function to calculate distance between two coordinate pairs
+install.packages("geosphere")
+library("geosphere")
+
+euclidean <- function(a, b) sqrt(sum((a - b)^2))
+
+#define two vectors
+a <- c(2, 6, 7, 7, 5, 13, 14, 17, 11, 8)
+b <- c(3, 5, 5, 3, 7, 12, 13, 19, 22, 7)
+
+#calculate Euclidean distance between vectors
+euclidean (a , b)
+
+#calculate Manhattan distance between vectors
+#create function to calculate Manhattan distance
+manhattan_dist <- function(a, b){
+  dist <- abs(a-b)
+  dist <- sum(dist)
+  return(dist)
+}
+#define two vectors
+a <- c(2, 6, 7, 7, 5, 13, 14, 17, 11, 8)
+b <- c(3, 5, 5, 3, 7, 12, 13, 19, 22, 7)
+
+manhattan_dist(a, b)
+c("Manhattan Distance: ",Man,"\nEuclidean Distance:",Euc)
