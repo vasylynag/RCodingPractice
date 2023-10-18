@@ -1,0 +1,123 @@
+boxplot(PJan1x, PJan2x)
+mean(PJan2x)-mean(PJan1x)
+tt.PJan.1
+boxplot(TJan1x, TJan2x,
+        main = "Change in January Temperature under different Carbon conditions",
+        at = c(1,2),
+        names = c("1xC", "2xC"),
+        las = 2,
+        col = c("orange", "red"),
+        border = "brown",
+        horizontal = TRUE,
+        notch = TRUE,
+        xlab = "Change in temperature (C)",
+        ylab = "Carbon condition"
+)
+attach(orsim)
+boxplot(TJan1x, TJan2x,
+        main = "Change in January Temperature under different Carbon conditions",
+        at = c(1,2),
+        names = c("1xC", "2xC"),
+        las = 2,
+        col = c("orange", "red"),
+        border = "brown",
+        horizontal = TRUE,
+        notch = TRUE,
+        xlab = "Change in temperature (C)",
+        ylab = "Carbon condition"
+)
+paste ('Temperature Difference:',mean(TJan2x)-mean(TJan1x))
+# t-test among groups with different variances
+tt.TJan <- t.test(TJan2x, TJan1x)
+tt.TJan
+
+### Part 3 of Exercise Basic Mapping with R
+install.packages ('sf', dep = T)
+install.packages ('RColorBrewer', dep = T)
+library(sf)
+library(RColorBrewer)
+setwd("C:/Users/ganushcv/Desktop/VG Project Data/School/Exercise #3")
+boundaries <- st_read('StateBoundaries.shp')
+class (boundaries) #shows the type of object
+names (boundaries) #shows the field names
+nrow (boundaries) #number of rows
+head (boundaries) #prints the first few lines of the table
+str(boundaries)
+dev.off()
+plot(boundaries)
+plot(boundaries["Shape_Area"], main = "AREA", breaks = "quantile", nbreaks = 9, palette(brewer.pal(9, "YlOrRd")))
+
+#load the data into object "state data"
+statedata <- read.csv("state_data.csv")
+#
+# Look at the table – it has multiple entries for multiple years
+# we are only interested in 2020 here.
+#
+# Make a new object that contains only data for 2020.
+# The which commands lists the vector elements that match the specified
+# criteria. Here we’re building an object called “st2020” from “statedata”,
+# but only the elements that match the criterion statedata$YEAR=2020...
+st2020 <- statedata[ which(statedata$YEAR==2020), ]
+# look at the field headers of the data we’re interested in
+str(st2020)
+# look at the field headers of the state boundary data
+str(boundaries)
+# Notice that we can use the two-letter state code for the ID field.
+# It’s called “STUSPS” in the shapefile (boundaries) and “STATE” in
+# the tabular data (st2021).
+##
+# It’s easiest to perform a join is to give the key fields the same name in
+# both tables. Here we rename “STATE” to “STUSPS” in st2021, the tabular data.
+# This takes the second column in the data frame and names it “STUSPS”
+colnames(st2020)[2] ="STUSPS"
+names (st2020)
+# Now we can perform a join with the “merge” command.
+# There are several other ways to achieve this, but this should work.
+# Note that this works only when the key fields have the same name.
+# the first parameter is the shape file and the second the dataframe
+# by = “STUSPS” indicates the ID field (with the same name in each).
+boundaries2 <- merge (boundaries, st2020, by = c("STUSPS") )
+# Notice that a simple plot command will produce maps of the first nine
+# attributes
+plot (boundaries2)
+dev.off()
+plot(boundaries2["RATE"], main = "AREA", breaks = "quantile",
+     nbreaks = 9, pal = brewer.pal(9, "BuPu"))
+display.brewer.all()
+# I’m using the basic plot from above as an example – I’d like for you
+# to improve on this, which may require some independent investigation
+# of the tool, but here I demonstrate working with images once again.
+#
+# First look at your plot
+dev.off()
+plot(boundaries2["RATE"], main = "AREA", breaks = "quantile",
+     nbreaks = 9, pal = brewer.pal(9, "BuPu"))
+# Tell the computer that you’re writing a .jpg, with specs.
+# There are many other formats, including .pdf, and vector graphics
+# you can write to.
+# You can use a full path with the file name
+jpeg(file="ex03_rate_map.jpeg", width=3000, height=2000)
+plot(boundaries2["RATE"], main = "AREA", breaks = "quantile",
+     nbreaks = 9, pal = brewer.pal(9, "BuPu"))
+# dev.off() tells the computer you’re done with the .jpg
+
+### Assign and Create Equation for %of People Uninsured Per State
+USCensus <- read.csv("USCensusData2020.csv")
+attach(USCensus)
+
+### Create a New Column and Perform Equation
+USCensus$PCT_Unins <- ((NmbUninsured/TotPop)*100)
+print(USCensus)
+
+###Change Name of STATE Columns to STUSPS
+names (USCensus)
+colnames(USCensus)[1] ="STUSPS"
+names (USCensus)
+
+#Merge with Boundaries2
+boundaries2 <- merge (boundaries, USCensus, by = c("STUSPS") )
+print(boundaries2)
+
+###Plot PCT Unininsured
+plot (boundaries2["PCT_Unins"], main = "Percent of People Uninsured", breaks = "quantile", 
+      nbreaks = 7, pal = brewer.pal(7, "BuPu"))
