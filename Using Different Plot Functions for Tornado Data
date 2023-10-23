@@ -1,0 +1,133 @@
+### load and install following packages sf, sp, spatstat, and raster
+setwd("C:/Users/ganushcv/Desktop/VG Project Data/School/Exercise 4")
+library (sf)
+library (sp)
+library(spatstat)
+library(raster)
+library (tmap)
+
+# read it as an sf object (sf = “simple feature”)
+states.sf <- st_read("States.shp")
+
+# Here we’re making “states” as our observation window (‘owin’) object
+states.owin <- as.owin(states.sf)
+
+# Our GIS data are in meters, so we’re changing it to kilometers
+states.owin.km <- rescale(states.owin,1000)
+
+# Read touchdown points into r as an sf object
+tornus.sf <- st_read("torn_tchdown.shp")
+
+# The “spatstat” package likes ppp objects...
+tornus.ppp <- as.ppp(tornus.sf)
+# Since we’re only analysing patterns, we can remove the attributes
+# “Marks” in r basically refers to “attributes”
+marks(tornus.ppp) <- NULL
+# Also rescale the touchdown points
+# The map was in meters, and so we’re transforming it
+# to km, with a scale factor of 1000
+tornus.ppp.km <- rescale(tornus.ppp, 1000)
+typeof(tornus.ppp.km)
+class(tornus.ppp.km)
+
+###Check everything by plotting it
+plot(tornus.ppp.km, main=NULL, cols=rgb(0,0,0,.2), cex=0.2, pch=16)
+###The 'add' parameter specifies that the plot should be drawn on top of the number symbol
+###Map. This puts an outline around the US
+plot(states.owin.km,add=T)
+
+###Quadrat Map
+quad <- quadratcount(tornus.ppp, nx=20, ny=10)
+quad.d <- intensity(quad)
+###Plot density raster
+plot(intensity(quad, image=TRUE), main=NULL, las=1)
+###Note the "add" parameter again here
+plot(quad, add=TRUE)
+
+###This changes the colors. First we build an object that we can use to specify the colors. 
+###The interp.colours command specifies a gradient between light blue and red
+cl <- interp.colours(c("lightblue1", "red4"), 100)
+plot(intensity(quad, image=TRUE), main=NULL, las=1, col=cl)
+plot(quad, add=TRUE)
+
+###Kernel Plot 1
+## Using the default bandwidth, we can work with the ppp object
+K1 <- density(tornus.ppp.km)
+plot(K1, main=NULL, las=1)
+
+###This command adds the contours
+contour(K1, add=TRUE)
+
+install.packages(RColorBrewer)
+
+### Kernel Plot 2
+## Using a 100km bandwidth, specified by sigma = 100
+K2 <- density(tornus.ppp.km, sigma=200)
+
+## This uses the RdBu palette with five categories
+cl=brewer.pal(n = 5, name = "RdBu")
+
+## Here we plot it and set the col parameter to the col object we built above
+plot(K2, main=NULL, las=1, col=cl)
+
+##Add the contours
+contour(K2, add=TRUE)
+
+###Kernel Plot 3
+##Using a 400km bandwidth, Blue-Green Palette, this also switches up the kernel model a bit (with kernel="disc")
+K3 <- density(tornus.ppp.km, kernel = "disc", sigma=200)
+
+##This sets up a color palette gradient object from blue to red
+cl <- interp.colours(c("lightblue1", "red4"), 100)
+plot(K3, main=NULL, las=1, col=cl)
+
+##Add the tornado touchdown points, difficult to work the catography with this many points, try to improve the plot
+plot(tornus.ppp.km, main=NULL, cols=rgb(0,0,0,.1), cex=0.1, pcd=16, add=T)
+
+###Add the observation window boundary (the continental 48 states)
+plot(states.owin.km, add=T)
+
+##Add contours, try coloring them white to make it easier to see
+contour(K3, add=TRUE, col="white")
+
+###Part 03 Load the study frame layer from your GIS
+studyframe.sf <- st_read("StudyFrame.shp")
+
+##Clip the tornado touchdown layer by the clip layer
+torn_ia_clip <- tornus.sf[studyframe.sf,]
+
+##Make layer that shows the state boundaries in the study area
+boundaries_clip <- st_intersection(studyframe.sf,states.sf)
+tm_shape(studyframe.sf)+
+  tm_borders(col="black") +
+  tm_layout(frame=F) +
+  tm_shape(torn_ia_clip) +
+  tm_dots(col = NA, size = 0.02, shape = 16, title = NA,
+          legend.show = TRUE, legend.is.portrait = TRUE) +
+  tm_shape(boundaries_clip) +
+  tm_borders(col="grey70",lw=2) +
+  tm_layout (frame=F)
+
+##Turn the clipped point data into a ppp object for analysis in spatstat
+torn_ia.ppp <- as.ppp(torn_ia_clip)
+
+ls(tornus.sf)
+
+###Build new plots
+# Build a traditional Ripley’s K plot
+kf <- Kest(torn_ia.ppp,correction = "border")
+plot(kf)
+# It's great practice to include the confidence envelope
+kf.env <- envelope(torn_ia.ppp,Kest,correction="border")
+plot(kf.env)
+# Build an "L Function" - a standardized version of the Ripley's K plot
+lf.env <- envelope(torn_ia.ppp,Lest,correction="border")
+plot(lf.env, main = "Clustering of Tornadoes in USA", xlab="Bandwidth", ylab = "Proportion of Points in Bandwidth")
+# Build an "G Function" - a different approach to the same question
+gf.env <- envelope(torn_ia.ppp,Kest,correction="border")
+plot(gf.env, main = "Clustering of Tornadoes in USA", xlab="Bandwidth", ylab="Proportion of Points in Bandwidth")
+
+# Perform a Maximum Envelope Distance (MAD) Test on the K Estimates.
+mad.test(torn_ia.ppp,Kest,verbose=FALSE)
+# Perform a Diggle-Cressie-Loosmore-Ford (DCLF) Test
+dclf.test(torn_ia.ppp,Kest,verbose=FALSE)
